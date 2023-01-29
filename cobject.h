@@ -35,38 +35,39 @@
 	Cobject$Utility$Function$goto_##FUNC_ID:(RETURN_TYPE)Cobject$Utility$Function$return_value_##FUNC_ID;\
 })
 
-#define Function(INLINE_CODE, RETURN_VAR_VALUE)\
-({INLINE_CODE ((return_state_t)Cobject.Return(RETURN_VAR_VALUE));})
+// #define Function(INLINE_CODE, RETURN_VAR_VALUE)\
+// ({INLINE_CODE ((return_state_t)Cobject.Return(RETURN_VAR_VALUE));})
 
 #define Freturn( FUNC_ID, RETURN_VALUE )\
 ({Cobject$Utility$Function$return_value_##FUNC_ID=RETURN_VALUE;goto Cobject$Utility$Function$goto_##FUNC_ID;})
 
-#define Var(VAR_TYPE, VAR_NAME, ...)\
-var VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME)
+/// 더이상 사용되지 않는다. ///
+// #define Var(VAR_TYPE, VAR_NAME, ...)\
+// var VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME)
 
-#define Auto(VAR_TYPE, VAR_NAME, ...)\
-var VAR_NAME=0;case __COUNTER__+1:;Cobject$Memory$AutoUnload$is_unload==0?({VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME);Cobject$Memory$AutoUnload$var_count++;}):({Cobject.Unload(VAR_NAME);Cobject$Memory$AutoUnload$unload_pointer+=1;break;});
+// #define Auto(VAR_TYPE, VAR_NAME, ...)\
+// var VAR_NAME=0;case __COUNTER__+1:;Cobject$Memory$AutoUnload$is_unload==0?({VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME);Cobject$Memory$AutoUnload$var_count++;}):({Cobject.Unload(VAR_NAME);Cobject$Memory$AutoUnload$unload_pointer+=1;break;});
 
-#define Run(VARS, INLINE_CODE)\
-{\
-	uint8_t Cobject$Memory$AutoUnload$is_unload=0;\
-	uint8_t Cobject$Memory$AutoUnload$is_scan=1;\
-	uint16_t Cobject$Memory$AutoUnload$unload_pointer=0;\
-	uint16_t Cobject$Memory$AutoUnload$var_count=0;\
-	\
-	while(Cobject$Memory$AutoUnload$is_scan==1){\
-		switch(Cobject$Memory$AutoUnload$unload_pointer){\
-			case 0:;\
-			VARS\
-			INLINE_CODE\
-			Cobject$Memory$AutoUnload$is_unload=1;\
-			if(Cobject$Memory$AutoUnload$var_count==0){Cobject$Memory$AutoUnload$is_scan=0;break;}\
-			Cobject$Memory$AutoUnload$unload_pointer==0?(Cobject$Memory$AutoUnload$unload_pointer=__COUNTER__+1-Cobject$Memory$AutoUnload$var_count):0;\
-			break;\
-			default:;Cobject$Memory$AutoUnload$is_scan=0;\
-		}\
-	}\
-}
+// #define Run(VARS, INLINE_CODE)\
+// {\
+// 	uint8_t Cobject$Memory$AutoUnload$is_unload=0;\
+// 	uint8_t Cobject$Memory$AutoUnload$is_scan=1;\
+// 	uint16_t Cobject$Memory$AutoUnload$unload_pointer=0;\
+// 	uint16_t Cobject$Memory$AutoUnload$var_count=0;\
+// 	\
+// 	while(Cobject$Memory$AutoUnload$is_scan==1){\
+// 		switch(Cobject$Memory$AutoUnload$unload_pointer){\
+// 			case 0:;\
+// 			VARS\
+// 			INLINE_CODE\
+// 			Cobject$Memory$AutoUnload$is_unload=1;\
+// 			if(Cobject$Memory$AutoUnload$var_count==0){Cobject$Memory$AutoUnload$is_scan=0;break;}\
+// 			Cobject$Memory$AutoUnload$unload_pointer==0?(Cobject$Memory$AutoUnload$unload_pointer=__COUNTER__+1-Cobject$Memory$AutoUnload$var_count):0;\
+// 			break;\
+// 			default:;Cobject$Memory$AutoUnload$is_scan=0;\
+// 		}\
+// 	}\
+// }
 
 #define Get(VAR_TYPE, VAR_DATA)\
 (VAR_DATA.datas.VAR_TYPE.value)
@@ -81,13 +82,13 @@ sizeof(ARRAY)/sizeof(ARRAY_TYPE)
 Cobject$Utility$Thread$value_kit=(struct type$class_Cobject$Utility$Thread$value_kit){.exit_code=RETURN_CODE,.is_exit=o_true};return
 
 #define setupThread(...)\
-static void(*Cobject$Utility$Thread$setupThread[])()={__VA_ARGS__}
+static void(*Cobject$Utility$Thread$setupThread[])( const int argc, const char*const args[] )={__VA_ARGS__}
 
 #define loopThread(...)\
-static void(*Cobject$Utility$Thread$loopThread[])()={__VA_ARGS__}
+static void(*Cobject$Utility$Thread$loopThread[])( const int argc, const char*const args[] )={__VA_ARGS__}
 
 #define startThread()\
-int main()\
+int main( const int argc, const char*const args[] )\
 {\
 	uint16_t setup_count = sizeof(Cobject$Utility$Thread$setupThread) / sizeof(void(*)());\
 	uint16_t loop_count = sizeof(Cobject$Utility$Thread$loopThread) / sizeof(void(*)());\
@@ -143,6 +144,7 @@ typedef struct _undefined_t
 
 
 
+
 typedef struct type$class_Cobject$Object_type$var
 {
 	uint8_t is_lvalue : 1;
@@ -174,10 +176,6 @@ typedef struct _return_state_t
 
 
 
-return_state_t method$class_Cobject$Update(var* const data);
-
-
-
 
 static var method$class_Cobject$Bool(uint8_t bool)
 {
@@ -194,7 +192,7 @@ static var method$class_Cobject$Bool(uint8_t bool)
 		}
 	);
 }
-var(*Bool)(uint8_t bool) = method$class_Cobject$Bool;
+var(*const Bool)(uint8_t bool) = method$class_Cobject$Bool;
 
 
 static var method$class_Cobject$Number(type$number_t$value number)
@@ -212,7 +210,7 @@ static var method$class_Cobject$Number(type$number_t$value number)
 		}
 	);
 }
-var(*Number)(type$number_t$value number) = method$class_Cobject$Number;
+var(*const Number)(type$number_t$value number) = method$class_Cobject$Number;
 
 
 static var method$class_Cobject$Array(const type$array_t$array_len array_len, const var *const var_data_array )
@@ -238,7 +236,7 @@ static var method$class_Cobject$Array(const type$array_t$array_len array_len, co
 	);
 
 }
-var(*Array)( type$array_t$array_len array_len, const var *const var_data_array ) = method$class_Cobject$Array;
+var(*const Array)( type$array_t$array_len array_len, const var *const var_data_array ) = method$class_Cobject$Array;
 
 
 var method$class_Cobject$String(const type$string_t$value* const string)
@@ -274,7 +272,7 @@ var method$class_Cobject$Null()
 		}
 	);
 }
-var(*Null)() = method$class_Cobject$Null;
+var(*const Null)() = method$class_Cobject$Null;
 
 
 var method$class_Cobject$Undefined()
@@ -288,7 +286,7 @@ var method$class_Cobject$Undefined()
 		}
 	);
 }
-var(*Undefined)() = method$class_Cobject$Undefined;
+var(*const Undefined)() = method$class_Cobject$Undefined;
 
 
 void method$class_Cobject$Unload(const var data)
@@ -303,7 +301,7 @@ void method$class_Cobject$Unload(const var data)
 		default:;
 	}
 }
-void(*Unload)(const var data) = method$class_Cobject$Unload;
+void(*const Unload)(const var data) = method$class_Cobject$Unload;
 
 
 var method$class_Cobject$Equel( const var get0, const var get1 )
@@ -358,6 +356,8 @@ var method$class_Cobject$Equel( const var get0, const var get1 )
 		return( Bool(o_false) );
 	}
 }
+var(*const Equel)( const var get0, const var get1 ) = method$class_Cobject$Equel;
+
 
 
 
