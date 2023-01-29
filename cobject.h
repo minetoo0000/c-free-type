@@ -331,7 +331,8 @@ static var method$class_Cobject$Array(const type$array_t$array_len array_len, co
 	);
 
 }
-var(*Array)(type$array_t$array_len array_len, const var data, ...) = method$class_Cobject$Array;
+// var(*Array)(type$array_t$array_len array_len, const var data, ...) = method$class_Cobject$Array;
+var(*Array)( type$array_t$array_len array_len, const var *const var_data_array ) = method$class_Cobject$Array;
 
 // String ������ ��ȯ �Լ�.
 var method$class_Cobject$String(const type$string_t$value* const string)
@@ -548,7 +549,8 @@ struct class$Cobject
 {
 	var(*Bool)(uint8_t bool);
 	var(*Number)(type$number_t$value number);
-	var(*Array)(type$array_t$array_len array_len, const var const data, ...);
+	// var(*Array)(type$array_t$array_len array_len, const var const data, ...);
+	var(*Array)(type$array_t$array_len array_len, const var *const var_data_array);
 	var(*String)(const type$string_t$value* const string);
 	var(*Null)();
 	var(*Undefined)();
