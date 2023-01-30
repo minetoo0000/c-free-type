@@ -27,6 +27,7 @@
 #define TYPE$Array   (int8_t)3
 #define TYPE$String   (int8_t)4
 #define TYPE$Json   (int8_t)5
+#define TYPE$Mem   (int8_t)6
 
 #define o_typeis( VAR_DATA )   (VAR_DATA.type)
 
@@ -144,12 +145,19 @@ typedef struct _undefined_t
 	uint8_t value : 1;
 } undefined_t;
 
+typedef struct _mem_t
+{
+	uint8_t is_free : 1;
+	uint64_t byte_size;
+	// value : 메모리 주소.
+	void *value;
+} mem_t;
+
 
 
 
 typedef struct type$class_Cobject$Object_type$var
 {
-	uint8_t is_lvalue : 1;
 	int8_t type : 7;
 	union _datas
 	{
@@ -163,7 +171,7 @@ typedef struct type$class_Cobject$Object_type$var
 		string_t String;
 		null_t Null;
 		undefined_t Undefined;
-		
+		mem_t Mem;
 	} datas;
 } var;
 
@@ -184,7 +192,6 @@ static var method$class_Cobject$Bool(uint8_t bool)
 	return(
 		(var)
 		{
-			.is_lvalue = o_false,
 			.type = TYPE$Bool,
 			.datas = {
 				.Bool = {
@@ -202,7 +209,6 @@ static var method$class_Cobject$Number(type$number_t$value number)
 	return(
 		(var)
 		{
-			.is_lvalue = o_false,
 			.type = TYPE$Number,
 			.datas = {
 				.Number = {
@@ -226,7 +232,6 @@ static var method$class_Cobject$Array(const type$array_t$array_len array_len, co
 	return(
 		(var)
 		{
-			.is_lvalue = o_false,
 			.type = TYPE$Array,
 			.datas = {
 				.Array = {
@@ -249,7 +254,6 @@ var method$class_Cobject$String(const type$string_t$value* const string)
 	return(
 		(var)
 		{
-			.is_lvalue = o_false,
 			.type = TYPE$String,
 			.datas = {
 				.String = {
@@ -268,7 +272,6 @@ var method$class_Cobject$Null()
 	return(
 		(var)
 		{
-			.is_lvalue = o_false,
 			.type = TYPE$null,
 			.datas = 0,
 		}
@@ -282,7 +285,6 @@ var method$class_Cobject$Undefined()
 	return(
 		(var)
 		{
-			.is_lvalue = o_false,
 			.type = TYPE$undefined,
 			.datas = 0,
 		}
@@ -291,19 +293,91 @@ var method$class_Cobject$Undefined()
 var(*const Undefined)() = method$class_Cobject$Undefined;
 
 
-void method$class_Cobject$Unload(const var data)
+const var f$Cobject$Mem( const uint64_t byte_size )
 {
-	switch ( data.type )
+	var result = {
+		.type = TYPE$null,
+		.datas.Null.value = 0,
+	};
+	// fail
+	if ( !byte_size ) return( result );
+
+	void *mem_space = malloc(byte_size);
+
+	// fail
+	if ( !mem_space ) return( result );
+	
+	// success
+	result = (var){
+		.type = TYPE$Mem,
+		.datas.Mem = {
+			.is_free = 0,
+			.byte_size = byte_size,
+			.value = mem_space,
+		},
+	};
+	return( result );
+}
+
+const var f$Cobject$resizeMem( const var mem, const var new_byte_size )
+{
+	var result = {
+		.type = TYPE$null,
+		.datas.Null.value = 0,
+	};
+	
+	if ( mem.type != TYPE$Mem );
+	else if ( mem.datas.Mem.is_free );
+	else if ( mem.datas.Mem.value == 0 );
+	else if ( new_byte_size.type != TYPE$Number );
+	else if ( mem.datas.Mem.byte_size == (uint64_t)new_byte_size.datas.Number.value );
+	else if ( (uint64_t)new_byte_size.datas.Number.value <= 0 );
+	else goto access;
+	return( result );
+
+	access:;
+	void *const new_space = realloc(mem.datas.Mem.value, (uint64_t)new_byte_size.datas.Number.value);
+
+	if ( new_space == 0 );
+	else goto success;
+	return( result );
+
+	success:;
+	result = (var){
+		.type = TYPE$Mem,
+		.datas.Mem = {
+			.is_free = 0,
+			.byte_size = (uint64_t)new_byte_size.datas.Number.value,
+			.value = new_space,
+		},
+	};
+	return( result );
+}
+
+
+void method$class_Cobject$Unload(var *const data)
+{
+	switch ( data->type )
 	{
-		case TYPE$Array : free( data.datas.Array.value );
+		case TYPE$Array : free( data->datas.Array.value );
 		goto OUT;
-		case TYPE$String : free( data.datas.String.value );
+
+		case TYPE$String : free( data->datas.String.value );
 		goto OUT;
+
+		case TYPE$Mem : free( data->datas.Mem.value );
+		goto OUT;
+
+
 		OUT:
-		default:;
+		default:
+		*data = (var){
+			.type = TYPE$null,
+			.datas.Null.value = 0,
+		};
 	}
 }
-void(*const Unload)(const var data) = method$class_Cobject$Unload;
+void(*const Unload)(var *const data) = method$class_Cobject$Unload;
 
 
 var method$class_Cobject$Equel( const var get0, const var get1 )
@@ -372,10 +446,12 @@ struct class$Cobject
 	var(*const String)(const type$string_t$value* const string);
 	var(*const Null)();
 	var(*const Undefined)();
+	const var(*const Mem)( const uint64_t byte_size );
 
-	void(*const Unload)(const var data);
+	void(*const Unload)(var *const data);
 	var(*const Equel)( const var get0, const var get1 );
 	int(*const typeis)( const var data );
+	const var(*const resizeMem)( const var mem, const var new_byte_size );
 } Cobject = {
 	.Bool = method$class_Cobject$Bool,
 	.Number = method$class_Cobject$Number,
@@ -383,10 +459,12 @@ struct class$Cobject
 	.String = method$class_Cobject$String,
 	.Null = method$class_Cobject$Null,
 	.Undefined = method$class_Cobject$Undefined,
+	.Mem = f$Cobject$Mem,
 
 	.Unload = method$class_Cobject$Unload,
 	.Equel = method$class_Cobject$Equel,
 	.typeis = f$Cobject$typeis,
+	.resizeMem = f$Cobject$resizeMem,
 };
 
 struct type$class_Cobject$Utility$Thread$value_kit
