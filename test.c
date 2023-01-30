@@ -1,109 +1,101 @@
 #include "cobject.h"
 
-void doit1( const int len, const var *const data_array )
-{
 
-    for ( int i=0; i<len; i++ )
+void array_tree( const var array, const uint64_t distant )
+{
+    if ( array.type != TYPE$Array );
+    else if ( array.datas.Array.array_len <= 0 );
+    else goto access;
+    printf("\n value error!");
+    return;
+
+    access:;
+    #define upper( number ) for(uint64_t i=0;i<number;i++)printf("    ")
+
+    printf("{\n");
+    for ( uint64_t i=0; i<array.datas.Array.array_len; i++ )
     {
+        const var value = array.datas.Array.value[i];
+
+        upper(distant+1);
+        if ( value.type == TYPE$Bool )
+            printf("%s,", value.datas.Bool.value?"true":"false");
+        else if ( value.type == TYPE$Number )
+            printf("%lf,", value.datas.Number.value);
+        else if ( value.type == TYPE$Array )
+            array_tree(value, distant+1);
+        else if ( value.type == TYPE$String )
+            printf("\"%s\",", value.datas.String.value);
+        else if ( value.type == TYPE$null )
+            printf("null,");
+        else if ( value.type == TYPE$undefined )
+            printf("undefined,");
+        else
+            printf("[Unknown Type],");
+
         printf("\n");
-        if ( o_typeis(data_array[i]) == TYPE$Number )
-        {
-            printf("[%lf]", Get( Number, data_array[i] ));
-        }
-        else if ( o_typeis(data_array[i]) == TYPE$Bool )
-        {
-            printf("[%s]", Get( Bool, data_array[i] )?"true":"false");
-        }
-        else if ( o_typeis(data_array[i]) == TYPE$String )
-        {
-            printf("[%s]", Get( String, data_array[i] ));
-        }
+    }
+    upper(distant);printf("},");
 
-    }    
-}
-
-void doit( const var data )
-{
-    if ( Cobject.typeis(data) == TYPE$null )
-    {
-        printf("\n dataëŠ” null ìž…ë‹ˆë‹¤. 0ì€ ì•„ë‹ˆê³  ì¶”ìƒì ì¸ ê°’ìž…ë‹ˆë‹¤.");
-    }
-    else if ( o_typeis(data) == TYPE$String )
-    {
-        printf("\n data : \"%s\"", Get(String, data));
-    }
-    else if ( o_typeis(data) == TYPE$Array )
-    {
-        for ( int i=0; i<data.datas.Array.array_len; i++ )
-        {
-            printf("\n");
-            if ( o_typeis(Get(Array, data)[i]) == TYPE$Number )
-            {
-                printf("[%lf]", Get( Number, Get(Array, data)[i] ));
-            }
-            else if ( o_typeis(Get(Array, data)[i]) == TYPE$Bool )
-            {
-                printf("[%s]", Get( Bool, Get(Array, data)[i] )?"true":"false");
-            }
-            else if ( o_typeis(Get(Array, data)[i]) == TYPE$String )
-            {
-                printf("[%s]", Get( String, Get(Array, data)[i] ));
-            }
-
-        }
-    }
-    else
-    {
-        printf("\n ì˜ˆì•½ëœ íƒ€ìž…ë§Œ ì‚¬ìš© ê°€ëŠ¥í•©ë‹ˆë‹¤.");
-    }
+    #undef upper
 }
 
 int main( const int argc, const char*const args[] )
 {
+    var arr = Array(
+        arrv(
+            Number(11111),
+            String("ÀÚ¹Ù½ºÅ©¸³Æ®? ÈÊ, ³­ C¾ð¾î·Î ÀÚ¹Ù½ºÅ©¸³Æ® µû¶óÇÑ´Ù."),
+            Bool(o_true),
+            Bool(o_false),
+            Array(
+                3,
+                (var[])
+                {
+                    String("C ¾ð¾î, ¹Ý¶õÀÇ ½ÃÀÛ..."),
+                    Number(555),
+                    arr,
+                }
+            ),
+            Number(3405),
+        )
+    );
     var data = Array(
-        6,
-        (var[])
-        {
+        arrv(
+            arr,
             Number(1.2),
             Number(1.9999),
             Number(665.2),
-            Bool(1),
-            Bool(1),
-            String("ì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ë‚˜ì´ë‚˜ì•„ë‹ˆì•„ë‹ˆì•„ë‚˜ã…£ì´ã…ã…‡ë‚­ì•„ã…£ã…‡ë‚˜ì•„ã…£"),
-        }
-    );
-    
-    if(1)doit(
-        Array(
-            6,
-            (var[])
-            {
-                Number(1.2),
-                Number(1.9999),
-                Number(665.2),
-                Bool(1),
-                Bool(1),
-                String("ì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ë‚˜ì´ë‚˜ì•„ë‹ˆì•„ë‹ˆì•„ë‚˜ã…£ì´ã…ã…‡ë‚­ì•„ã…£ã…‡ë‚˜ì•„ã…£"),
-            }
+            Bool(o_true),
+            Array(
+                6,
+                (var[])
+                {
+                    String("¿©·¯ºÐ ÀÌ°Ç ¸»µµ ¾ÈµÇ¿ä."),
+                    String("ÀÌ°Ç Çõ¸íÀÔ´Ï´Ù!!"),
+                    String("C¾ð¾î¿¡¼­ ÀÌ·± °ÍÀÌ Á¤¸»·Î °¡´ÉÇÕ´Ï´Ù!!"),
+                    String("»ç½Ç ¾ð¾î¿Í »ó°ü ¾øÀÌ ¹«¾ùÀÌµç ÇÒ ¼ö ÀÖÁö¸¸"),
+                    String("C¾ð¾î¿¡¼­´Â ´Ù¸¥ ¾ð¾î¿¡¼± ´ç¿¬ÇÑ °ÍµéÀÌ »õ·Ó°Ô º¸ÀÔ´Ï´Ù."),
+                    arr,
+                }
+            ),
+            Bool(o_false),
+            Array(
+                3,
+                (var[])
+                {
+                    String("¹è¿­ ³»ºÎ ¹è¿­ ³»ºÎ ¹®ÀÚ¿­"),
+                    Bool(o_false),
+                    arr,
+                }
+            ),
+            String("¾Æ´Ï¾Æ´Ï¾Æ´Ï¾Æ´Ï¾Æ´Ï¾Æ´×³ªÀÌ³ª¾Æ´Ï¾Æ´Ï¾Æ³ª¤ÓÀÌ¤¿¤·³¶¾Æ¤Ó¤·³ª¾Æ¤Ó"),
+            arr,
         )
     );
 
-    doit1(
-        6,
-        (var[])
-        {
-            Number(1.2),
-            Number(1.9999),
-            Number(665.2),
-            Bool(1),
-            Bool(1),
-            String("ì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ˆì•„ë‹ë‚˜ì´ë‚˜ì•„ë‹ˆì•„ë‹ˆì•„ë‚˜ã…£ì´ã…ã…‡ë‚­ì•„ã…£ã…‡ë‚˜ì•„ã…£"),
-        }
-    );
+    array_tree(data, 0);
 
-
-    var data1 = data;
-    printf("\n is equel : %d", Get(Bool, Equel(data1, data1)));
 
     getchar();
     return( 0 );    

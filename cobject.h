@@ -81,6 +81,12 @@
 #define o_arraylen( ARRAY_TYPE, ARRAY )\
 sizeof(ARRAY)/sizeof(ARRAY_TYPE)
 
+#define arr( ARRAY_TYPE, ARRAY_VALUE, ... )\
+(sizeof((ARRAY_TYPE[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(ARRAY_TYPE)),([ARRAY_TYPE]){ARRAY_VALUE,##__VA_ARGS__}
+
+#define arrv( ARRAY_VALUE, ... )\
+(sizeof((var[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(var)),(var[]){ARRAY_VALUE,##__VA_ARGS__}
+
 #define AppExit( RETURN_CODE )\
 Cobject$Utility$Thread$value_kit=(struct type$class_Cobject$Utility$Thread$value_kit){.exit_code=RETURN_CODE,.is_exit=o_true};return
 
@@ -123,7 +129,7 @@ typedef struct _number_t
 	type$number_t$value value;
 } number_t;
 
-typedef uint16_t type$array_t$array_len;
+typedef uint64_t type$array_t$array_len;
 typedef void* type$array_t$value;
 
 typedef uint16_t type$string_t$string_len;
