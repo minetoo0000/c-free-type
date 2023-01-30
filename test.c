@@ -1,49 +1,110 @@
 #include "cobject.h"
 
-
-struct test
+void doit1( const int len, const var *const data_array )
 {
-    uint64_t v1;
-    uint64_t v2;
-    uint64_t v3;
-};
 
-
-var out( uint64_t type_size, ... )
-{
-    uint32_t len = type_size / sizeof(void**);
-    uint64_t chunk[len];
-
-    // printf("%llu", (getProp(type_size, uint64_t, 1)));
-    for ( uint64_t i=0; i<len; i++ )
+    for ( int i=0; i<len; i++ )
     {
-        printf("[%llu]", getProp(type_size, uint64_t, i));
-    }
-    for ( uint64_t i=0; i<len; i++ )
-    {
-        chunk[i] = *(getProp(type_size, uint64_t*, 0)+i);
-        // printf("[%llu]", chunk[i]);
-    }
-    printf("\n");
+        printf("\n");
+        if ( o_typeis(data_array[i]) == TYPE$Number )
+        {
+            printf("[%lf]", Get( Number, data_array[i] ));
+        }
+        else if ( o_typeis(data_array[i]) == TYPE$Bool )
+        {
+            printf("[%s]", Get( Bool, data_array[i] )?"true":"false");
+        }
+        else if ( o_typeis(data_array[i]) == TYPE$String )
+        {
+            printf("[%s]", Get( String, data_array[i] ));
+        }
 
-    return( *(var*)chunk );
+    }    
 }
 
-
-
-
-int main( int argc, const char *const args[] )
+void doit( const var data )
 {
-    var data = Cobject.Number(12.34);
-    var copy_data = out(sizeof(var), data, data, data);
+    if ( Cobject.typeis(data) == TYPE$null )
+    {
+        printf("\n data는 null 입니다. 0은 아니고 추상적인 값입니다.");
+    }
+    else if ( o_typeis(data) == TYPE$String )
+    {
+        printf("\n data : \"%s\"", Get(String, data));
+    }
+    else if ( o_typeis(data) == TYPE$Array )
+    {
+        for ( int i=0; i<data.datas.Array.array_len; i++ )
+        {
+            printf("\n");
+            if ( o_typeis(Get(Array, data)[i]) == TYPE$Number )
+            {
+                printf("[%lf]", Get( Number, Get(Array, data)[i] ));
+            }
+            else if ( o_typeis(Get(Array, data)[i]) == TYPE$Bool )
+            {
+                printf("[%s]", Get( Bool, Get(Array, data)[i] )?"true":"false");
+            }
+            else if ( o_typeis(Get(Array, data)[i]) == TYPE$String )
+            {
+                printf("[%s]", Get( String, Get(Array, data)[i] ));
+            }
 
-    printf("data : %lf\n", data.datas.Number.value);
-    printf("copy_data : %lf\n", copy_data.datas.Number.value);
-    // for ( uint64_t i=0; i<3; i++ ) printf("[%llu]", ((uint64_t*)&copy_data)[i]);
-    // printf("\n");
-    // for ( uint64_t i=0; i<3; i++ ) printf("[%llu]", ((uint64_t*)&data)[i]);
-    // printf("\n");
+        }
+    }
+    else
+    {
+        printf("\n 예약된 타입만 사용 가능합니다.");
+    }
+}
+
+int main( const int argc, const char*const args[] )
+{
+    var data = Array(
+        6,
+        (var[])
+        {
+            Number(1.2),
+            Number(1.9999),
+            Number(665.2),
+            Bool(1),
+            Bool(1),
+            String("아니아니아니아니아니아닝나이나아니아니아나ㅣ이ㅏㅇ낭아ㅣㅇ나아ㅣ"),
+        }
+    );
     
+    if(1)doit(
+        Array(
+            6,
+            (var[])
+            {
+                Number(1.2),
+                Number(1.9999),
+                Number(665.2),
+                Bool(1),
+                Bool(1),
+                String("아니아니아니아니아니아닝나이나아니아니아나ㅣ이ㅏㅇ낭아ㅣㅇ나아ㅣ"),
+            }
+        )
+    );
+
+    doit1(
+        6,
+        (var[])
+        {
+            Number(1.2),
+            Number(1.9999),
+            Number(665.2),
+            Bool(1),
+            Bool(1),
+            String("아니아니아니아니아니아닝나이나아니아니아나ㅣ이ㅏㅇ낭아ㅣㅇ나아ㅣ"),
+        }
+    );
+
+
+    var data1 = data;
+    printf("\n is equel : %d", Get(Bool, Equel(data1, data1)));
+
     getchar();
-    return( 0 );
+    return( 0 );    
 }

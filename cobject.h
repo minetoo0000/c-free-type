@@ -28,6 +28,8 @@
 #define TYPE$String   (int8_t)4
 #define TYPE$Json   (int8_t)5
 
+#define o_typeis( VAR_DATA )   (VAR_DATA.type)
+
 #define o_Function(RETURN_TYPE, FUNC_ID, CODE, ...)\
 ({\
 	RETURN_TYPE Cobject$Utility$Function$return_value_##FUNC_ID;\
@@ -41,7 +43,7 @@
 #define Freturn( FUNC_ID, RETURN_VALUE )\
 ({Cobject$Utility$Function$return_value_##FUNC_ID=RETURN_VALUE;goto Cobject$Utility$Function$goto_##FUNC_ID;})
 
-/// ë”ì´ìƒ ì‚¬ìš©ë˜ì§€ ì•ŠëŠ”ë‹¤. ///
+/// ´õÀÌ»ó »ç¿ëµÇÁö ¾Ê´Â´Ù. ///
 // #define Var(VAR_TYPE, VAR_NAME, ...)\
 // var VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME)
 
@@ -72,7 +74,7 @@
 #define Get(VAR_TYPE, VAR_DATA)\
 (VAR_DATA.datas.VAR_TYPE.value)
 
-// ê°€ë³€ ì¸ìë¥¼ ê°€ì ¸ì˜¨ë‹¤. ì‹œìŠ¤í…œ bit ìˆ˜ í¬ê¸° ê¹Œì§€ë§Œ ì •ìƒì ìœ¼ë¡œ ê°€ì ¸ì˜¬ ìˆ˜ ìˆë‹¤. (64bit, 32bit)
+// °¡º¯ ÀÎÀÚ¸¦ °¡Á®¿Â´Ù. ½Ã½ºÅÛ bit ¼ö Å©±â ±îÁö¸¸ Á¤»óÀûÀ¸·Î °¡Á®¿Ã ¼ö ÀÖ´Ù. (64bit, 32bit)
 #define getProp(START_VAR, GET_TYPE, INDEX)   (*(GET_TYPE*)((((void**)&(START_VAR)))+(1+INDEX)))
 
 #define o_arraylen( ARRAY_TYPE, ARRAY )\
@@ -125,7 +127,7 @@ typedef void* type$array_t$value;
 
 typedef uint16_t type$string_t$string_len;
 typedef uint16_t type$string_t$string_size;
-typedef int8_t type$string_t$value;
+typedef char type$string_t$value;
 typedef struct _string_t
 {
 	type$string_t$string_size string_size;
@@ -311,7 +313,6 @@ var method$class_Cobject$Equel( const var get0, const var get1 )
 		if ( get0.type == TYPE$Bool )
 		{
 			return ( get0.datas.Bool.value == get1.datas.Bool.value ) ? ( Bool(o_true) ) : ( Bool(o_false) );
-
 		}
 		else if ( get0.type == TYPE$Number )
 		{
@@ -319,22 +320,18 @@ var method$class_Cobject$Equel( const var get0, const var get1 )
 		}
 		else if ( get0.type == TYPE$Array )
 		{
-
 			if ( get0.datas.Array.array_len != get1.datas.Array.array_len ) return( Bool(o_false) );
-			
-			const var* array = &get0;
-			for ( uint64_t i=0; i<array->datas.Array.array_len; i++ )
+			for ( uint64_t i=0; i<get0.datas.Array.array_len; i++ )
 			{
-				if ( !method$class_Cobject$Equel(get0.datas.Array.value[i], get1.datas.Array.value[i]).datas.Bool.value )
-				{
-					return( Bool(o_false) );
-				}
+				const var data0 = get0.datas.Array.value[i];
+				const var data1 = get1.datas.Array.value[i];
+				if ( !method$class_Cobject$Equel(data0, data1).datas.Bool.value ) return( Bool(o_false) );
 			}
 			return( Bool(o_true) );
 		}
 		else if ( get0.type == TYPE$String )
 		{
-			if ( get0.datas.String.string_size == get1.datas.String.string_size ) return( Bool(o_false) );
+			if ( get0.datas.String.string_size != get1.datas.String.string_size ) return( Bool(o_false) );
 			return( Bool(!!!strcmp((char*)get0.datas.String.value, (char*)get1.datas.String.value)) );
 		}
 		else if ( get0.type == TYPE$null )
@@ -359,6 +356,12 @@ var method$class_Cobject$Equel( const var get0, const var get1 )
 var(*const Equel)( const var get0, const var get1 ) = method$class_Cobject$Equel;
 
 
+int f$Cobject$typeis( const var data )
+{
+	return( data.type );
+}
+
+
 
 
 struct class$Cobject
@@ -370,8 +373,9 @@ struct class$Cobject
 	var(*const Null)();
 	var(*const Undefined)();
 
-	void(*Unload)(const var data);
-	var(*Equel)( const var get0, const var get1 );
+	void(*const Unload)(const var data);
+	var(*const Equel)( const var get0, const var get1 );
+	int(*const typeis)( const var data );
 } Cobject = {
 	.Bool = method$class_Cobject$Bool,
 	.Number = method$class_Cobject$Number,
@@ -382,6 +386,7 @@ struct class$Cobject
 
 	.Unload = method$class_Cobject$Unload,
 	.Equel = method$class_Cobject$Equel,
+	.typeis = f$Cobject$typeis,
 };
 
 struct type$class_Cobject$Utility$Thread$value_kit
