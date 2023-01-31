@@ -1,7 +1,8 @@
 #include "cobject.h"
+#include <windows.h>
 
 
-void array_tree( const var array, const uint64_t distant )
+void array_tree( const let array, const uint64_t distant )
 {
     if ( array.type != TYPE$Array );
     else if ( array.datas.Array.array_len <= 0 );
@@ -15,7 +16,7 @@ void array_tree( const var array, const uint64_t distant )
     printf("{\n");
     for ( uint64_t i=0; i<array.datas.Array.array_len; i++ )
     {
-        const var value = array.datas.Array.value[i];
+        const let value = array.datas.Array.value[i];
 
         upper(distant+1);
         if ( value.type == TYPE$Bool )
@@ -42,7 +43,7 @@ void array_tree( const var array, const uint64_t distant )
 
 int main( const int argc, const char*const args[] )
 {
-    var arr = Array(
+    let arr = Array(
         arrv(
             Number(11111),
             String("자바스크립트? 훗, 난 C언어로 자바스크립트 따라한다."),
@@ -50,7 +51,7 @@ int main( const int argc, const char*const args[] )
             Bool(o_false),
             Array(
                 3,
-                (var[])
+                (let[])
                 {
                     String("C 언어, 반란의 시작..."),
                     Number(555),
@@ -60,7 +61,7 @@ int main( const int argc, const char*const args[] )
             Number(3405),
         )
     );
-    var data = Array(
+    let data = Array(
         arrv(
             arr,
             Number(1.2),
@@ -69,7 +70,7 @@ int main( const int argc, const char*const args[] )
             Bool(o_true),
             Array(
                 6,
-                (var[])
+                (let[])
                 {
                     String("여러분 이건 말도 안되요."),
                     String("이건 혁명입니다!!"),
@@ -82,7 +83,7 @@ int main( const int argc, const char*const args[] )
             Bool(o_false),
             Array(
                 3,
-                (var[])
+                (let[])
                 {
                     String("배열 내부 배열 내부 문자열"),
                     Bool(o_false),
@@ -93,9 +94,11 @@ int main( const int argc, const char*const args[] )
             arr,
         )
     );
-
     array_tree(data, 0);
 
+    Array$.push(array, Number(55.55));
+    let item = Array$.pop(array);
+    
 
     getchar();
     return( 0 );    

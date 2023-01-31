@@ -46,10 +46,10 @@
 
 /// 더이상 사용되지 않는다. ///
 // #define Var(VAR_TYPE, VAR_NAME, ...)\
-// var VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME)
+// let VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME)
 
 // #define Auto(VAR_TYPE, VAR_NAME, ...)\
-// var VAR_NAME=0;case __COUNTER__+1:;Cobject$Memory$AutoUnload$is_unload==0?({VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME);Cobject$Memory$AutoUnload$var_count++;}):({Cobject.Unload(VAR_NAME);Cobject$Memory$AutoUnload$unload_pointer+=1;break;});
+// let VAR_NAME=0;case __COUNTER__+1:;Cobject$Memory$AutoUnload$is_unload==0?({VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME);Cobject$Memory$AutoUnload$var_count++;}):({Cobject.Unload(VAR_NAME);Cobject$Memory$AutoUnload$unload_pointer+=1;break;});
 
 // #define Run(VARS, INLINE_CODE)\
 // {\
@@ -85,7 +85,7 @@ sizeof(ARRAY)/sizeof(ARRAY_TYPE)
 (sizeof((ARRAY_TYPE[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(ARRAY_TYPE)),([ARRAY_TYPE]){ARRAY_VALUE,##__VA_ARGS__}
 
 #define arrv( ARRAY_VALUE, ... )\
-(sizeof((var[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(var)),(var[]){ARRAY_VALUE,##__VA_ARGS__}
+(sizeof((let[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(let)),(let[]){ARRAY_VALUE,##__VA_ARGS__}
 
 #define AppExit( RETURN_CODE )\
 Cobject$Utility$Thread$value_kit=(struct type$class_Cobject$Utility$Thread$value_kit){.exit_code=RETURN_CODE,.is_exit=o_true};return
@@ -162,7 +162,7 @@ typedef struct _mem_t
 
 
 
-typedef struct type$class_Cobject$Object_type$var
+typedef struct type$class_Cobject$Object_type$let
 {
 	int8_t type : 7;
 	union _datas
@@ -172,14 +172,14 @@ typedef struct type$class_Cobject$Object_type$var
 		struct _array_t
 		{
 			type$array_t$array_len array_len;
-			struct type$class_Cobject$Object_type$var* value;
+			struct type$class_Cobject$Object_type$let* value;
 		} Array;
 		string_t String;
 		null_t Null;
 		undefined_t Undefined;
 		mem_t Mem;
 	} datas;
-} var;
+} let;
 
 
 typedef uint8_t type$return_state_t$log; 
@@ -187,121 +187,15 @@ typedef struct _return_state_t
 {
 	const uint8_t success : 7;
 	const type$return_state_t$log* const log;
-	const var data;
+	const let data;
 } return_state_t;
 
 
 
 
-static var method$class_Cobject$Bool(uint8_t bool)
+const let f$Cobject$Mem( const uint64_t byte_size )
 {
-	return(
-		(var)
-		{
-			.type = TYPE$Bool,
-			.datas = {
-				.Bool = {
-					.value = bool,
-				},
-			},
-		}
-	);
-}
-var(*const Bool)(uint8_t bool) = method$class_Cobject$Bool;
-
-
-static var method$class_Cobject$Number(type$number_t$value number)
-{
-	return(
-		(var)
-		{
-			.type = TYPE$Number,
-			.datas = {
-				.Number = {
-					.value = number,
-				},
-			},
-		}
-	);
-}
-var(*const Number)(type$number_t$value number) = method$class_Cobject$Number;
-
-
-static var method$class_Cobject$Array(const type$array_t$array_len array_len, const var *const var_data_array )
-{
-	var *const output_array = (var*)calloc(array_len, sizeof(var));
-	for ( type$array_t$array_len index=0; index<array_len; index++ )
-	{
-		output_array[index] = var_data_array[index];
-	}
-	
-	return(
-		(var)
-		{
-			.type = TYPE$Array,
-			.datas = {
-				.Array = {
-					.array_len = array_len,
-					.value = output_array,
-				},
-			},
-		}
-	);
-
-}
-var(*const Array)( type$array_t$array_len array_len, const var *const var_data_array ) = method$class_Cobject$Array;
-
-
-var method$class_Cobject$String(const type$string_t$value* const string)
-{
-	type$string_t$value* output_string = (type$string_t$value*)calloc(strlen((char*)string)+sizeof(type$string_t$value), sizeof(type$string_t$value));
-	for ( uint64_t i=0; i<=strlen((char*)string); i++ ) output_string[i] = string[i];
-
-	return(
-		(var)
-		{
-			.type = TYPE$String,
-			.datas = {
-				.String = {
-					.string_size = strlen((char*)output_string),
-					.value = output_string,
-				},
-			},
-		}
-	);
-}
-var(*const String)(const type$string_t$value* const string) = method$class_Cobject$String;
-
-
-var method$class_Cobject$Null()
-{
-	return(
-		(var)
-		{
-			.type = TYPE$null,
-			.datas = 0,
-		}
-	);
-}
-var(*const Null)() = method$class_Cobject$Null;
-
-
-var method$class_Cobject$Undefined()
-{
-	return(
-		(var)
-		{
-			.type = TYPE$undefined,
-			.datas = 0,
-		}
-	);
-}
-var(*const Undefined)() = method$class_Cobject$Undefined;
-
-
-const var f$Cobject$Mem( const uint64_t byte_size )
-{
-	var result = {
+	let result = {
 		.type = TYPE$null,
 		.datas.Null.value = 0,
 	};
@@ -314,7 +208,7 @@ const var f$Cobject$Mem( const uint64_t byte_size )
 	if ( !mem_space ) return( result );
 	
 	// success
-	result = (var){
+	result = (let){
 		.type = TYPE$Mem,
 		.datas.Mem = {
 			.is_free = 0,
@@ -324,10 +218,12 @@ const var f$Cobject$Mem( const uint64_t byte_size )
 	};
 	return( result );
 }
+const let(*const Mem)( const uint64_t byte_size ) = f$Cobject$Mem;
 
-const var f$Cobject$resizeMem( const var mem, const var new_byte_size )
+
+const let f$Cobject$resizeMem( const let mem, const let new_byte_size )
 {
-	var result = {
+	let result = {
 		.type = TYPE$null,
 		.datas.Null.value = 0,
 	};
@@ -349,7 +245,7 @@ const var f$Cobject$resizeMem( const var mem, const var new_byte_size )
 	return( result );
 
 	success:;
-	result = (var){
+	result = (let){
 		.type = TYPE$Mem,
 		.datas.Mem = {
 			.is_free = 0,
@@ -359,9 +255,10 @@ const var f$Cobject$resizeMem( const var mem, const var new_byte_size )
 	};
 	return( result );
 }
+const let(*const resizeMem)( const let mem, const let new_byte_size ) = f$Cobject$resizeMem;
 
 
-void method$class_Cobject$Unload(var *const data)
+void method$class_Cobject$Unload(let *const data)
 {
 	switch ( data->type )
 	{
@@ -377,16 +274,123 @@ void method$class_Cobject$Unload(var *const data)
 
 		OUT:
 		default:
-		*data = (var){
+		*data = (let){
 			.type = TYPE$null,
 			.datas.Null.value = 0,
 		};
 	}
 }
-void(*const Unload)(var *const data) = method$class_Cobject$Unload;
+void(*const Unload)(let *const data) = method$class_Cobject$Unload;
 
 
-var method$class_Cobject$Equel( const var get0, const var get1 )
+static let method$class_Cobject$Bool(uint8_t bool)
+{
+	return(
+		(let)
+		{
+			.type = TYPE$Bool,
+			.datas = {
+				.Bool = {
+					.value = bool,
+				},
+			},
+		}
+	);
+}
+let(*const Bool)(uint8_t bool) = method$class_Cobject$Bool;
+
+
+static let method$class_Cobject$Number(type$number_t$value number)
+{
+	return(
+		(let)
+		{
+			.type = TYPE$Number,
+			.datas = {
+				.Number = {
+					.value = number,
+				},
+			},
+		}
+	);
+}
+let(*const Number)(type$number_t$value number) = method$class_Cobject$Number;
+
+
+static let method$class_Cobject$Array(const type$array_t$array_len array_len, const let *const var_data_array )
+{
+
+	
+	// let *const output_array = (let*)calloc(array_len, sizeof(let));
+	// for ( type$array_t$array_len index=0; index<array_len; index++ )
+	// {
+	// 	output_array[index] = var_data_array[index];
+	// }
+	
+	// return(
+	// 	(let)
+	// 	{
+	// 		.type = TYPE$Array,
+	// 		.datas = {
+	// 			.Array = {
+	// 				.array_len = array_len,
+	// 				.value = output_array,
+	// 			},
+	// 		},
+	// 	}
+	// );
+}
+let(*const Array)( type$array_t$array_len array_len, const let *const var_data_array ) = method$class_Cobject$Array;
+
+
+let method$class_Cobject$String(const type$string_t$value* const string)
+{
+	type$string_t$value* output_string = (type$string_t$value*)calloc(strlen((char*)string)+sizeof(type$string_t$value), sizeof(type$string_t$value));
+	for ( uint64_t i=0; i<=strlen((char*)string); i++ ) output_string[i] = string[i];
+
+	return(
+		(let)
+		{
+			.type = TYPE$String,
+			.datas = {
+				.String = {
+					.string_size = strlen((char*)output_string),
+					.value = output_string,
+				},
+			},
+		}
+	);
+}
+let(*const String)(const type$string_t$value* const string) = method$class_Cobject$String;
+
+
+let method$class_Cobject$Null()
+{
+	return(
+		(let)
+		{
+			.type = TYPE$null,
+			.datas = 0,
+		}
+	);
+}
+let(*const Null)() = method$class_Cobject$Null;
+
+
+let method$class_Cobject$Undefined()
+{
+	return(
+		(let)
+		{
+			.type = TYPE$undefined,
+			.datas = 0,
+		}
+	);
+}
+let(*const Undefined)() = method$class_Cobject$Undefined;
+
+
+let method$class_Cobject$Equel( const let get0, const let get1 )
 {
 	if ( get0.type == get1.type )
 	{
@@ -403,8 +407,8 @@ var method$class_Cobject$Equel( const var get0, const var get1 )
 			if ( get0.datas.Array.array_len != get1.datas.Array.array_len ) return( Bool(o_false) );
 			for ( uint64_t i=0; i<get0.datas.Array.array_len; i++ )
 			{
-				const var data0 = get0.datas.Array.value[i];
-				const var data1 = get1.datas.Array.value[i];
+				const let data0 = get0.datas.Array.value[i];
+				const let data1 = get1.datas.Array.value[i];
 				if ( !method$class_Cobject$Equel(data0, data1).datas.Bool.value ) return( Bool(o_false) );
 			}
 			return( Bool(o_true) );
@@ -433,31 +437,35 @@ var method$class_Cobject$Equel( const var get0, const var get1 )
 		return( Bool(o_false) );
 	}
 }
-var(*const Equel)( const var get0, const var get1 ) = method$class_Cobject$Equel;
+let(*const Equel)( const let get0, const let get1 ) = method$class_Cobject$Equel;
 
 
-int f$Cobject$typeis( const var data )
+int f$Cobject$typeis( const let data )
 {
 	return( data.type );
 }
 
 
+let f$Cobject$Array$push( let array, const let value )
+{
+
+}
 
 
 struct class$Cobject
 {
-	var(*const Bool)(uint8_t bool);
-	var(*const Number)(type$number_t$value number);
-	var(*const Array)(type$array_t$array_len array_len, const var *const var_data_array);
-	var(*const String)(const type$string_t$value* const string);
-	var(*const Null)();
-	var(*const Undefined)();
-	const var(*const Mem)( const uint64_t byte_size );
+	let(*const Bool)(uint8_t bool);
+	let(*const Number)(type$number_t$value number);
+	let(*const Array)(type$array_t$array_len array_len, const let *const var_data_array);
+	let(*const String)(const type$string_t$value* const string);
+	let(*const Null)();
+	let(*const Undefined)();
+	const let(*const Mem)( const uint64_t byte_size );
 
-	void(*const Unload)(var *const data);
-	var(*const Equel)( const var get0, const var get1 );
-	int(*const typeis)( const var data );
-	const var(*const resizeMem)( const var mem, const var new_byte_size );
+	void(*const Unload)(let *const data);
+	let(*const Equel)( const let get0, const let get1 );
+	int(*const typeis)( const let data );
+	const let(*const resizeMem)( const let mem, const let new_byte_size );
 } Cobject = {
 	.Bool = method$class_Cobject$Bool,
 	.Number = method$class_Cobject$Number,
