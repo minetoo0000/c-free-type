@@ -44,7 +44,7 @@
 #define Freturn( FUNC_ID, RETURN_VALUE )\
 ({Cobject$Utility$Function$return_value_##FUNC_ID=RETURN_VALUE;goto Cobject$Utility$Function$goto_##FUNC_ID;})
 
-/// ´õÀÌ»ó »ç¿ëµÇÁö ¾Ê´Â´Ù. ///
+/// ë”ì´ìƒ ì‚¬ìš©ë˜ì§€ ì•ŠëŠ”ë‹¤. ///
 // #define Var(VAR_TYPE, VAR_NAME, ...)\
 // let VAR_NAME=Cobject.VAR_TYPE(__VA_ARGS__);Cobject.Update(&VAR_NAME)
 
@@ -75,7 +75,7 @@
 #define Get(VAR_TYPE, VAR_DATA)\
 (VAR_DATA.datas.VAR_TYPE.value)
 
-// °¡º¯ ÀÎÀÚ¸¦ °¡Á®¿Â´Ù. ½Ã½ºÅÛ bit ¼ö Å©±â ±îÁö¸¸ Á¤»óÀûÀ¸·Î °¡Á®¿Ã ¼ö ÀÖ´Ù. (64bit, 32bit)
+// ê°€ë³€ ì¸ìë¥¼ ê°€ì ¸ì˜¨ë‹¤. ì‹œìŠ¤í…œ bit ìˆ˜ í¬ê¸° ê¹Œì§€ë§Œ ì •ìƒì ìœ¼ë¡œ ê°€ì ¸ì˜¬ ìˆ˜ ìˆë‹¤. (64bit, 32bit)
 #define getProp(START_VAR, GET_TYPE, INDEX)   (*(GET_TYPE*)((((void**)&(START_VAR)))+(1+INDEX)))
 
 #define o_arraylen( ARRAY_TYPE, ARRAY )\
@@ -84,8 +84,18 @@ sizeof(ARRAY)/sizeof(ARRAY_TYPE)
 #define arr( ARRAY_TYPE, ARRAY_VALUE, ... )\
 (sizeof((ARRAY_TYPE[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(ARRAY_TYPE)),([ARRAY_TYPE]){ARRAY_VALUE,##__VA_ARGS__}
 
+/**
+ * @brief 
+ * ê°€ë³€ì¸ì ë¶€ë¶„ì€ ë¬´ì‹œí•œë‹¤.
+ * @example
+ * arrv(
+ *   Number(1),
+ *   Number(2),
+ *   String("test"),
+ * )
+ */
 #define arrv( ARRAY_VALUE, ... )\
-(sizeof((let[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(let)),(let[]){ARRAY_VALUE,##__VA_ARGS__}
+(sizeof((let[]){ARRAY_VALUE,##__VA_ARGS__})/sizeof(let)),((let[]){ARRAY_VALUE,##__VA_ARGS__})
 
 #define AppExit( RETURN_CODE )\
 Cobject$Utility$Thread$value_kit=(struct type$class_Cobject$Utility$Thread$value_kit){.exit_code=RETURN_CODE,.is_exit=o_true};return
@@ -155,7 +165,7 @@ typedef struct _mem_t
 {
 	uint8_t is_free : 1;
 	uint64_t byte_size;
-	// value : ¸Ş¸ğ¸® ÁÖ¼Ò.
+	// value : ë©”ëª¨ë¦¬ ì£¼ì†Œ.
 	void *value;
 } mem_t;
 
@@ -221,7 +231,7 @@ const let f$Cobject$Mem( const uint64_t byte_size )
 const let(*const Mem)( const uint64_t byte_size ) = f$Cobject$Mem;
 
 
-const let f$Cobject$resizeMem( const let mem, const let new_byte_size )
+const let f$Cobject$Mem$resizeMem( const let mem, const let new_byte_size )
 {
 	let result = {
 		.type = TYPE$null,
@@ -255,7 +265,6 @@ const let f$Cobject$resizeMem( const let mem, const let new_byte_size )
 	};
 	return( result );
 }
-const let(*const resizeMem)( const let mem, const let new_byte_size ) = f$Cobject$resizeMem;
 
 
 void method$class_Cobject$Unload(let *const data)
@@ -317,51 +326,87 @@ static let method$class_Cobject$Number(type$number_t$value number)
 let(*const Number)(type$number_t$value number) = method$class_Cobject$Number;
 
 
-static let method$class_Cobject$Array(const type$array_t$array_len array_len, const let *const var_data_array )
+static let method$class_Cobject$Array(const type$array_t$array_len array_len, let *const let_data_array )
 {
-
-	
-	// let *const output_array = (let*)calloc(array_len, sizeof(let));
-	// for ( type$array_t$array_len index=0; index<array_len; index++ )
-	// {
-	// 	output_array[index] = var_data_array[index];
-	// }
-	
-	// return(
-	// 	(let)
-	// 	{
-	// 		.type = TYPE$Array,
-	// 		.datas = {
-	// 			.Array = {
-	// 				.array_len = array_len,
-	// 				.value = output_array,
-	// 			},
-	// 		},
-	// 	}
-	// );
+	return(
+		(let)
+		{
+			.type = TYPE$Array,
+			.datas = {
+				.Array = {
+					.array_len = array_len,
+					.value = let_data_array,
+				},
+			},
+		}
+	);
 }
-let(*const Array)( type$array_t$array_len array_len, const let *const var_data_array ) = method$class_Cobject$Array;
+let(*const Array)( type$array_t$array_len array_len, let *const var_data_array ) = method$class_Cobject$Array;
 
 
-let method$class_Cobject$String(const type$string_t$value* const string)
+void f$Cobject$Array$print_array_tree( const let array, const uint64_t distant, FILE *const output_file )
 {
-	type$string_t$value* output_string = (type$string_t$value*)calloc(strlen((char*)string)+sizeof(type$string_t$value), sizeof(type$string_t$value));
-	for ( uint64_t i=0; i<=strlen((char*)string); i++ ) output_string[i] = string[i];
+    if ( array.type != TYPE$Array );
+    else if ( array.datas.Array.array_len <= 0 );
+    else goto access;
+    fprintf(output_file, "\n [value error!]");
+    return;
 
+    access:;
+    #define upper( number ) for(uint64_t i=0;i<number;i++)printf("    ")
+
+    fprintf(output_file, "{\n");
+    for ( uint64_t i=0; i<array.datas.Array.array_len; i++ )
+    {
+        const let value = array.datas.Array.value[i];
+
+        upper(distant+1);
+        if ( value.type == TYPE$Bool )
+            fprintf(output_file, "%s,", value.datas.Bool.value?"true":"false");
+        else if ( value.type == TYPE$Number )
+            fprintf(output_file, "%lf,", value.datas.Number.value);
+        else if ( value.type == TYPE$Array )
+            f$Cobject$Array$print_array_tree(value, distant+1, output_file);
+        else if ( value.type == TYPE$String )
+            fprintf(output_file, "\"%s\",", value.datas.String.value);
+        else if ( value.type == TYPE$null )
+            fprintf(output_file, "null,");
+        else if ( value.type == TYPE$undefined )
+            fprintf(output_file, "undefined,");
+        else
+            fprintf(output_file, "[Unknown Type],");
+
+        fprintf(output_file, "\n");
+    }
+    upper(distant);fprintf(output_file, "},");
+
+    #undef upper
+}
+
+struct t$cft$Array$
+{
+	void(*const print_array_tree)( const let array, const uint64_t distant, FILE *const output_file );
+} Array$ = {
+	.print_array_tree = f$Cobject$Array$print_array_tree,
+};
+
+
+let method$class_Cobject$String( type$string_t$value* const string )
+{
 	return(
 		(let)
 		{
 			.type = TYPE$String,
 			.datas = {
 				.String = {
-					.string_size = strlen((char*)output_string),
-					.value = output_string,
+					.string_size = strlen(string),
+					.value = string,
 				},
 			},
 		}
 	);
 }
-let(*const String)(const type$string_t$value* const string) = method$class_Cobject$String;
+let(*const String)( type$string_t$value* const string ) = method$class_Cobject$String;
 
 
 let method$class_Cobject$Null()
@@ -446,26 +491,26 @@ int f$Cobject$typeis( const let data )
 }
 
 
-let f$Cobject$Array$push( let array, const let value )
-{
-
-}
 
 
 struct class$Cobject
 {
 	let(*const Bool)(uint8_t bool);
 	let(*const Number)(type$number_t$value number);
-	let(*const Array)(type$array_t$array_len array_len, const let *const var_data_array);
-	let(*const String)(const type$string_t$value* const string);
+	let(*const Array)(type$array_t$array_len array_len, let *const let_data_array);
+	let(*const String)(type$string_t$value* const string);
 	let(*const Null)();
 	let(*const Undefined)();
 	const let(*const Mem)( const uint64_t byte_size );
 
+	struct Mem$
+	{
+		const let(*const resizeMem)( const let mem, const let new_byte_size );
+	} Mem$;
+
 	void(*const Unload)(let *const data);
 	let(*const Equel)( const let get0, const let get1 );
 	int(*const typeis)( const let data );
-	const let(*const resizeMem)( const let mem, const let new_byte_size );
 } Cobject = {
 	.Bool = method$class_Cobject$Bool,
 	.Number = method$class_Cobject$Number,
@@ -475,10 +520,13 @@ struct class$Cobject
 	.Undefined = method$class_Cobject$Undefined,
 	.Mem = f$Cobject$Mem,
 
+	.Mem$ = {
+		.resizeMem = f$Cobject$Mem$resizeMem,
+	},
+
 	.Unload = method$class_Cobject$Unload,
 	.Equel = method$class_Cobject$Equel,
 	.typeis = f$Cobject$typeis,
-	.resizeMem = f$Cobject$resizeMem,
 };
 
 struct type$class_Cobject$Utility$Thread$value_kit
